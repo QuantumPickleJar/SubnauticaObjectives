@@ -74,6 +74,10 @@ Testing proceeds by:
 - Verifying that the correct toast notification fires for each transition
 - Verifying that the PDA tab reflects the correct graph state
 
+## Dependency Policy
+
+**No Nautilus dependency.** Nautilus is incompatible with Nitrox (the co-op mod this project is designed for). All game APIs are accessed directly via BepInEx 6 + Harmony patches and raw interop assembly references. This is a hard constraint.
+
 ## Development Priority
 
 1. ~~Author and validate the graph~~ ✓ (65 nodes, 77 facts, 9 chapters — fully authored)

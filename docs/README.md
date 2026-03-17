@@ -42,3 +42,39 @@ The project is now moving into the early game-integration phase:
 - **Upcoming:** a new "Objectives" PDA Databank tab, dynamically generated at startup by checking the vanilla game's progression state
 
 See `docs/design-overview.md` for the full design approach and testing strategy.
+
+## Building the Plugin
+
+The BepInEx plugin lives in `src/SubnauticaObjectives/`. It targets **net6.0** and requires **BepInEx 6 (IL2CPP)** — the Subnautica Living Large update switched the game to IL2CPP, so BepInEx 5 and Nautilus are not supported.
+
+### Prerequisites
+
+1. [.NET 6 SDK](https://dotnet.microsoft.com/download/dotnet/6.0)
+2. **Tobey's BepInEx 6 IL2CPP pack** installed in Subnautica:
+   <https://github.com/toebeann/BepInEx.Subnautica>
+3. Launch Subnautica once after installing BepInEx so it generates the interop assemblies in `<GameDir>/BepInEx/interop/`.
+
+### Local setup
+
+```
+cd src/SubnauticaObjectives
+cp GamePath.props.example GamePath.props
+# Edit GamePath.props and set <GameDir> to your Subnautica install path
+dotnet build
+```
+
+A successful build automatically copies the DLL to `<GameDir>/BepInEx/plugins/SubnauticaObjectives/`.
+
+Also copy `data/campaign.graph.json` to `<GameDir>/BepInEx/plugins/SubnauticaObjectives/data/campaign.graph.json` — only needed once (or after graph updates).
+
+### Testing in-game
+
+- Open the console and run `explodeship` to trigger the Aurora explosion event.
+- A toast notification should appear showing the new active objective.
+- Open the PDA → Databank → look for the "Objectives" section.
+
+### Validating the graph (offline)
+
+```
+dotnet run --project tools/GraphInspector
+```

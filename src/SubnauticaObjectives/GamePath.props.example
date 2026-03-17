@@ -1,0 +1,33 @@
+<!--
+  GamePath.props.example
+  ──────────────────────
+  Copy this file to GamePath.props (same directory) and set <GameDir> to the root of your
+  Subnautica installation. GamePath.props is git-ignored and never committed to the repo.
+
+  Typical locations:
+    Windows Steam : C:\Program Files (x86)\Steam\steamapps\common\Subnautica
+    Windows Epic  : C:\Program Files\Epic Games\Subnautica
+    Linux Steam   : ~/.steam/steam/steamapps/common/Subnautica
+
+  Prerequisites:
+    1. Install Tobey's BepInEx 6 IL2CPP pack for Subnautica (Living Large / IL2CPP edition).
+       https://github.com/toebeann/BepInEx.Subnautica
+    2. Launch Subnautica once so BepInEx generates the interop assemblies under
+       <GameDir>\BepInEx\interop\.
+    3. Set <GameDir> below and build this project.
+
+  The post-build target will automatically copy SubnauticaObjectives.dll to
+  <GameDir>\BepInEx\plugins\SubnauticaObjectives\ after each successful build.
+
+  Also copy data\campaign.graph.json to
+  <GameDir>\BepInEx\plugins\SubnauticaObjectives\data\campaign.graph.json
+  (once only, or after any graph changes).
+
+  NOTE: Do NOT use Nautilus. This mod targets Nitrox co-op and Nautilus is not
+        compatible with Nitrox. All game APIs are accessed directly via BepInEx + Harmony.
+-->
+<Project>
+  <PropertyGroup>
+    <GameDir>C:\Program Files (x86)\Steam\steamapps\common\Subnautica</GameDir>
+  </PropertyGroup>
+</Project>
