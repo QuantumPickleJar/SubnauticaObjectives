@@ -1,17 +1,17 @@
 using BepInEx;
 using BepInEx.Logging;
-using BepInEx.Unity.IL2CPP;
 using HarmonyLib;
 using SubnauticaObjectives.Facts;
 using SubnauticaObjectives.Graph;
 using SubnauticaObjectives.Models;
 using SubnauticaObjectives.Notifications;
 using SubnauticaObjectives.PDA;
+using UnityEngine;
 
 namespace SubnauticaObjectives;
 
 [BepInPlugin(PluginInfo.PLUGIN_GUID, PluginInfo.PLUGIN_NAME, PluginInfo.PLUGIN_VERSION)]
-public sealed class Plugin : BasePlugin
+public sealed class Plugin
 {
     // Singleton accessors used by patches and the session behaviour.
     internal static ManualLogSource? Log { get; private set; }
@@ -22,40 +22,51 @@ public sealed class Plugin : BasePlugin
     // Hint depth used for display. Could later be read from a config file.
     internal static int HintDepth { get; private set; } = 1;
 
-    public override void Load()
+    // BepInEx v5 Mono: Use a static constructor to initialize the plugin
+    static Plugin()
     {
-        Log = base.Log;
-        Log.LogInfo($"Loading {PluginInfo.PLUGIN_NAME} v{PluginInfo.PLUGIN_VERSION}");
-
-        // Resolve the campaign graph path from the plugin directory.
-        string pluginDir = System.IO.Path.GetDirectoryName(
-            System.Reflection.Assembly.GetExecutingAssembly().Location)!;
-        string graphPath = GraphLoader.DefaultPath(pluginDir);
-
-        Graph = GraphLoader.Load(graphPath, Log);
-        if (Graph is null)
+        try
         {
-            Log.LogError("Plugin disabled — campaign graph could not be loaded.");
-            return;
+            // Create a manual log source for this plugin
+            Log = BepInEx.Logging.Logger.CreateLogSource(PluginInfo.PLUGIN_NAME);
+            Log.LogInfo($"Loading {PluginInfo.PLUGIN_NAME} v{PluginInfo.PLUGIN_VERSION}");
+
+            // Resolve the campaign graph path from the plugin directory.
+            string pluginDir = System.IO.Path.GetDirectoryName(
+                System.Reflection.Assembly.GetExecutingAssembly().Location)!;
+            string graphPath = GraphLoader.DefaultPath(pluginDir);
+
+            Graph = GraphLoader.Load(graphPath, Log);
+            if (Graph is null)
+            {
+                Log.LogError("Plugin disabled — campaign graph could not be loaded.");
+                return;
+            }
+
+            // Initialize subsystems.
+            Registry = new FactRegistry();
+            Evaluator = new GraphEvaluator(Graph);
+
+            ToastManager.Initialize(Log);
+            ObjectivesPdaTab.Initialize(Log);
+
+            // Wire the fact-added callback to re-evaluate and show a toast when facts change.
+            Registry.OnFactAdded += OnFactAdded;
+
+            // Apply Harmony patches (StoryGoalPatches, KnownTechPatches).
+            new Harmony(PluginInfo.PLUGIN_GUID).PatchAll();
+
+            // Attach the per-session MonoBehaviour that runs startup detection.
+            // Note: For Mono v5, we'll create this GameObject and attach the behaviour
+            var gameObject = new GameObject("SubnauticaObjectivesSessionBehaviour");
+            gameObject.AddComponent<ObjectiveSessionBehaviour>();
+
+            Log.LogInfo($"{PluginInfo.PLUGIN_NAME} loaded successfully.");
         }
-
-        // Initialize subsystems.
-        Registry = new FactRegistry();
-        Evaluator = new GraphEvaluator(Graph);
-
-        ToastManager.Initialize(Log);
-        ObjectivesPdaTab.Initialize(Log);
-
-        // Wire the fact-added callback to re-evaluate and show a toast when facts change.
-        Registry.OnFactAdded += OnFactAdded;
-
-        // Apply Harmony patches (StoryGoalPatches, KnownTechPatches).
-        new Harmony(PluginInfo.PLUGIN_GUID).PatchAll();
-
-        // Attach the per-session MonoBehaviour that runs startup detection.
-        AddComponent<ObjectiveSessionBehaviour>();
-
-        Log.LogInfo($"{PluginInfo.PLUGIN_NAME} loaded successfully.");
+        catch (System.Exception ex)
+        {
+            Log?.LogError($"Error initializing plugin: {ex}");
+        }
     }
 
     // Called each time a new fact is added (at runtime, after startup bulk-load).

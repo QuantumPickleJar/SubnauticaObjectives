@@ -10,10 +10,11 @@
     Linux Steam   : ~/.steam/steam/steamapps/common/Subnautica
 
   Prerequisites:
-    1. Install Tobey's BepInEx 6 IL2CPP pack for Subnautica (Living Large / IL2CPP edition).
-       https://github.com/toebeann/BepInEx.Subnautica
-    2. Launch Subnautica once so BepInEx generates the interop assemblies under
-       <GameDir>\BepInEx\interop\.
+    1. Install BepInEx v5 (Mono) for Subnautica.
+       https://www.nexusmods.com/subnautica/mods/1108
+       or
+       https://github.com/toebeann/BepInEx.Subnautica (find the Mono release)
+    2. No additional setup needed beyond standard BepInEx installation.
     3. Set <GameDir> below and build this project.
 
   The post-build target will automatically copy SubnauticaObjectives.dll to
@@ -28,6 +29,6 @@
 -->
 <Project>
   <PropertyGroup>
-    <GameDir>C:\Program Files (x86)\Steam\steamapps\common\Subnautica</GameDir>
+    <GameDir>D:\Games\Steam\steamapps\common\Subnautica</GameDir>
   </PropertyGroup>
 </Project>

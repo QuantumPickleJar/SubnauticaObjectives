@@ -1,4 +1,3 @@
-using BepInEx.Unity.IL2CPP;
 using SubnauticaObjectives.Facts;
 using SubnauticaObjectives.Graph;
 using SubnauticaObjectives.Notifications;
@@ -14,9 +13,6 @@ namespace SubnauticaObjectives;
 internal sealed class ObjectiveSessionBehaviour : MonoBehaviour
 {
     private bool _initialised;
-
-    // Il2Cpp constructor required for IL2CPP MonoBehaviour subclasses.
-    public ObjectiveSessionBehaviour(System.IntPtr ptr) : base(ptr) { }
 
     private void Update()
     {

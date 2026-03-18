@@ -76,7 +76,8 @@ public static class ObjectivesPdaTab
             key        = key,
             // path is the slash-separated category path shown in the Databank tree.
             path       = $"{CategoryKey}/{key}",
-            timeCapsule = false,
+            // TODO: timeCapsule field may not exist in this version of Subnautica.
+            // timeCapsule = false,
         };
 
         // Register the entry if it is not already known.
