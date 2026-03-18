@@ -16,6 +16,7 @@ namespace SubnauticaObjectives;
 /// </summary>
 [BepInPlugin(PluginInfo.PLUGIN_GUID, PluginInfo.PLUGIN_NAME, PluginInfo.PLUGIN_VERSION)]
 public sealed class Plugin : BaseUnityPlugin
+public sealed class Plugin : BaseUnityPlugin
 {
     // Singleton accessors used by patches and the session behaviour.
     public static ManualLogSource? Log { get; private set; }
