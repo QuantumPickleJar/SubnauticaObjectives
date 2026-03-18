@@ -1,6 +1,6 @@
 {
   "mod_id": "vincent.subnautica.guidance",
-  "version": "0.2.1-full-campaign-amended",
+  "version": "0.2.1-full-campaign-amended-patched",
   "design_notes": {
     "host_authoritative": true,
     "shared_world_completion": true,

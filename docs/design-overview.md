@@ -48,9 +48,39 @@ Every important node should support:
 - completion rules
 - already-satisfied rules
 
+Rules are authored as boolean expressions (e.g. `fact_a AND NOT fact_b`, `fact_a OR fact_b`) evaluated against a set of detected facts.
+
+## Design Bias
+
+The graph uses a **hybrid story-and-capability-driven** approach with safety barriers.
+
+- Story nodes drive the main campaign arc (Aurora, QEP, Degasi trail, Lost River, cure, escape)
+- Capability nodes handle early-game equipment that is required to safely reach story content
+- Safety barriers act as checkpoints to prevent players from skipping critical scannable items or repairs
+- Completion rules use flexible OR-based logic so players who arrive at a location by an unplanned route are still recognized as having progressed
+
+This bias is declared in the graph as `design_bias: "hybrid_story_and_capability_driven_with_safety_barriers"`.
+
+## Testing Strategy
+
+Initial game integration uses two complementary mechanisms:
+
+1. **Toast-like notifications** — the primary display mode for the current testing phase. These appear in-game when the active objective changes, driven by story-setting console commands (e.g. `explodeship`) and manual fact injection.
+
+2. **PDA Objectives tab** — a new tab in the Databank section of the PDA called "Objectives". This tab is dynamically generated once at startup by checking the vanilla game's progression state and remains the canonical in-game display for the full release.
+
+Testing proceeds by:
+- Using story commands like `explodeship` to simulate milestone-triggering events
+- Verifying that the correct toast notification fires for each transition
+- Verifying that the PDA tab reflects the correct graph state
+
+## Dependency Policy
+
+**No Nautilus dependency.** Nautilus is incompatible with Nitrox (the co-op mod this project is designed for). All game APIs are accessed directly via BepInEx 6 + Harmony patches and raw interop assembly references. This is a hard constraint.
+
 ## Development Priority
 
-1. Author and validate the graph
-2. Build a standalone evaluator
-3. Add a tiny in-game test surface
-4. Add fact detection gradually
+1. ~~Author and validate the graph~~ ✓ (65 nodes, 77 facts, 9 chapters — fully authored)
+2. ~~Build a standalone evaluator~~ ✓ (GraphInspector validates structural integrity)
+3. **Add a tiny in-game test surface** ← current focus (toast notifications + PDA Objectives tab)
+4. Add fact detection gradually (via vanilla progression state at startup and live Harmony patches)
