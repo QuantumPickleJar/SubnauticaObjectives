@@ -6,7 +6,6 @@ using SubnauticaObjectives.Graph;
 using SubnauticaObjectives.Models;
 using SubnauticaObjectives.Notifications;
 using SubnauticaObjectives.PDA;
-using UnityEngine;
 
 namespace SubnauticaObjectives;
 
@@ -16,6 +15,7 @@ namespace SubnauticaObjectives;
 /// v5 plugins must derive from BaseUnityPlugin so Chainloader can instantiate them.
 /// </summary>
 [BepInPlugin(PluginInfo.PLUGIN_GUID, PluginInfo.PLUGIN_NAME, PluginInfo.PLUGIN_VERSION)]
+public sealed class Plugin : BaseUnityPlugin
 public sealed class Plugin : BaseUnityPlugin
 {
     // Singleton accessors used by patches and the session behaviour.
