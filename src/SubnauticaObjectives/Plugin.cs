@@ -6,7 +6,6 @@ using SubnauticaObjectives.Graph;
 using SubnauticaObjectives.Models;
 using SubnauticaObjectives.Notifications;
 using SubnauticaObjectives.PDA;
-using UnityEngine;
 
 namespace SubnauticaObjectives;
 

@@ -45,14 +45,15 @@ See `docs/design-overview.md` for the full design approach and testing strategy.
 
 ## Building the Plugin
 
-The BepInEx plugin lives in `src/SubnauticaObjectives/`. It targets **net6.0** and requires **BepInEx 6 (IL2CPP)** — the Subnautica Living Large update switched the game to IL2CPP, so BepInEx 5 and Nautilus are not supported.
+The BepInEx plugin lives in `src/SubnauticaObjectives/`. It targets **net6.0** and requires **BepInEx v5 (Mono)**. Nautilus is not supported because it is incompatible with Nitrox.
 
 ### Prerequisites
 
 1. [.NET 6 SDK](https://dotnet.microsoft.com/download/dotnet/6.0)
-2. **Tobey's BepInEx 6 IL2CPP pack** installed in Subnautica:
-   <https://github.com/toebeann/BepInEx.Subnautica>
-3. Launch Subnautica once after installing BepInEx so it generates the interop assemblies in `<GameDir>/BepInEx/interop/`.
+2. **BepInEx v5 (Mono)** installed in Subnautica:
+   <https://www.nexusmods.com/subnautica/mods/1108>
+   or the Mono release from <https://github.com/toebeann/BepInEx.Subnautica>
+3. No additional setup is needed beyond a standard BepInEx v5 installation.
 
 ### Local setup
 
@@ -71,7 +72,7 @@ Also copy `data/campaign.graph.json` to `<GameDir>/BepInEx/plugins/SubnauticaObj
 
 The full test loop is:
 
-1. Prerequisites met and BepInEx interop assemblies generated (one-time, see above)
+1. Prerequisites met (BepInEx v5 installed in the game directory, one-time, see above)
 2. Build and deploy the DLL (`dotnet build`)
 3. Campaign JSON copied to the plugin data folder (one-time, see above)
 4. Launch Subnautica and load or create a **new survival save**
