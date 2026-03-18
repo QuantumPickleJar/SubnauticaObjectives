@@ -1,10 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFramework>net472</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>
-    <LangVersion>latest</LangVersion>
+    <LangVersion>10.0</LangVersion>
     <AssemblyName>SubnauticaObjectives</AssemblyName>
     <RootNamespace>SubnauticaObjectives</RootNamespace>
     <!-- Do not copy BepInEx/Unity DLLs into the output — they live in the game folder. -->
@@ -52,6 +52,10 @@
     </Reference>
     <Reference Include="UnityEngine">
       <HintPath>$(GameDir)\Subnautica_Data\Managed\UnityEngine.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>$(GameDir)\Subnautica_Data\Managed\Newtonsoft.Json.dll</HintPath>
       <Private>false</Private>
     </Reference>
   </ItemGroup>

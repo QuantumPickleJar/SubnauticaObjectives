@@ -12,7 +12,7 @@ namespace SubnauticaObjectives.Graph;
 public static class RuleParser
 {
     // Returns true if every string in the rules list evaluates to true (implicit AND between list items).
-    public static bool EvaluateAll(IReadOnlyList<string> rules, IReadOnlySet<string> facts)
+    public static bool EvaluateAll(IReadOnlyList<string> rules, ISet<string> facts)
     {
         foreach (var rule in rules)
         {
@@ -23,7 +23,7 @@ public static class RuleParser
     }
 
     // Evaluates a single boolean rule expression against the given fact set.
-    public static bool Evaluate(string rule, IReadOnlySet<string> facts)
+    public static bool Evaluate(string rule, ISet<string> facts)
     {
         if (string.IsNullOrWhiteSpace(rule))
             return true;
@@ -33,7 +33,7 @@ public static class RuleParser
         return ParseExpr(tokens, ref pos, facts);
     }
 
-    private static bool ParseExpr(List<string> tokens, ref int pos, IReadOnlySet<string> facts)
+    private static bool ParseExpr(List<string> tokens, ref int pos, ISet<string> facts)
     {
         bool result = ParseTerm(tokens, ref pos, facts);
         while (pos < tokens.Count && tokens[pos] == "OR")
@@ -44,7 +44,7 @@ public static class RuleParser
         return result;
     }
 
-    private static bool ParseTerm(List<string> tokens, ref int pos, IReadOnlySet<string> facts)
+    private static bool ParseTerm(List<string> tokens, ref int pos, ISet<string> facts)
     {
         bool result = ParseFactor(tokens, ref pos, facts);
         while (pos < tokens.Count && tokens[pos] == "AND")
@@ -55,7 +55,7 @@ public static class RuleParser
         return result;
     }
 
-    private static bool ParseFactor(List<string> tokens, ref int pos, IReadOnlySet<string> facts)
+    private static bool ParseFactor(List<string> tokens, ref int pos, ISet<string> facts)
     {
         if (pos >= tokens.Count)
             return false;
@@ -93,7 +93,7 @@ public static class RuleParser
             while (i < expr.Length && expr[i] != '(' && expr[i] != ')' && !char.IsWhiteSpace(expr[i]))
                 i++;
 
-            tokens.Add(expr[start..i]);
+            tokens.Add(expr.Substring(start, i - start));
         }
         return tokens;
     }

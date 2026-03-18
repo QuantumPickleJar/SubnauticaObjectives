@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using System.IO;
-using System.Text.Json;
+using Newtonsoft.Json;
 using BepInEx.Logging;
 using SubnauticaObjectives.Models;
 
@@ -10,13 +10,6 @@ namespace SubnauticaObjectives.Graph;
 // Expected location: BepInEx/plugins/SubnauticaObjectives/data/campaign.graph.json
 public static class GraphLoader
 {
-    private static readonly JsonSerializerOptions SerializerOptions = new()
-    {
-        PropertyNameCaseInsensitive = true,
-        ReadCommentHandling = JsonCommentHandling.Skip,
-        AllowTrailingCommas = true
-    };
-
     public static CampaignGraph? Load(string path, ManualLogSource log)
     {
         if (!File.Exists(path))
@@ -28,7 +21,7 @@ public static class GraphLoader
         try
         {
             string json = File.ReadAllText(path);
-            var graph = JsonSerializer.Deserialize<CampaignGraph>(json, SerializerOptions);
+            var graph = JsonConvert.DeserializeObject<CampaignGraph>(json);
             if (graph is null)
             {
                 log.LogError("[GraphLoader] Deserialization returned null.");

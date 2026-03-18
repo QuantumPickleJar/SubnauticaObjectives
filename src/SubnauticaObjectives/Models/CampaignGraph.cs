@@ -1,71 +1,71 @@
 using System.Collections.Generic;
-using System.Text.Json.Serialization;
+using Newtonsoft.Json;
 
 namespace SubnauticaObjectives.Models;
 
 // Root graph document loaded from campaign.graph.json.
 public sealed class CampaignGraph
 {
-    [JsonPropertyName("mod_id")]
+    [JsonProperty("mod_id")]
     public string ModId { get; set; } = string.Empty;
 
-    [JsonPropertyName("version")]
+    [JsonProperty("version")]
     public string Version { get; set; } = string.Empty;
 
-    [JsonPropertyName("facts")]
-    public List<string> Facts { get; set; } = [];
+    [JsonProperty("facts")]
+    public List<string> Facts { get; set; } = new List<string>();
 
-    [JsonPropertyName("nodes")]
-    public List<GraphNode> Nodes { get; set; } = [];
+    [JsonProperty("nodes")]
+    public List<GraphNode> Nodes { get; set; } = new List<GraphNode>();
 }
 
 public sealed class GraphNode
 {
-    [JsonPropertyName("id")]
+    [JsonProperty("id")]
     public string Id { get; set; } = string.Empty;
 
-    [JsonPropertyName("node_type")]
+    [JsonProperty("node_type")]
     public string NodeType { get; set; } = string.Empty;
 
-    [JsonPropertyName("title")]
+    [JsonProperty("title")]
     public string Title { get; set; } = string.Empty;
 
-    [JsonPropertyName("priority")]
+    [JsonProperty("priority")]
     public int? Priority { get; set; }
 
-    [JsonPropertyName("parent_major")]
+    [JsonProperty("parent_major")]
     public string? ParentMajor { get; set; }
 
-    [JsonPropertyName("predecessors")]
-    public List<string> Predecessors { get; set; } = [];
+    [JsonProperty("predecessors")]
+    public List<string> Predecessors { get; set; } = new List<string>();
 
-    [JsonPropertyName("successors")]
-    public List<string> Successors { get; set; } = [];
+    [JsonProperty("successors")]
+    public List<string> Successors { get; set; } = new List<string>();
 
-    [JsonPropertyName("activation_rules")]
-    public List<string> ActivationRules { get; set; } = [];
+    [JsonProperty("activation_rules")]
+    public List<string> ActivationRules { get; set; } = new List<string>();
 
-    [JsonPropertyName("completion_rules")]
-    public List<string> CompletionRules { get; set; } = [];
+    [JsonProperty("completion_rules")]
+    public List<string> CompletionRules { get; set; } = new List<string>();
 
-    [JsonPropertyName("already_satisfied_rules")]
-    public List<string> AlreadySatisfiedRules { get; set; } = [];
+    [JsonProperty("already_satisfied_rules")]
+    public List<string> AlreadySatisfiedRules { get; set; } = new List<string>();
 
-    [JsonPropertyName("completion_scope")]
+    [JsonProperty("completion_scope")]
     public string? CompletionScope { get; set; }
 
-    [JsonPropertyName("hint_layers")]
+    [JsonProperty("hint_layers")]
     public Dictionary<string, HintLayer>? HintLayers { get; set; }
 
-    [JsonPropertyName("tags")]
+    [JsonProperty("tags")]
     public List<string>? Tags { get; set; }
 }
 
 public sealed class HintLayer
 {
-    [JsonPropertyName("text")]
+    [JsonProperty("text")]
     public string Text { get; set; } = string.Empty;
 
-    [JsonPropertyName("visibility")]
+    [JsonProperty("visibility")]
     public string Visibility { get; set; } = string.Empty;
 }

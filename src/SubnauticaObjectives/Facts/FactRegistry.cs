@@ -14,7 +14,7 @@ public sealed class FactRegistry
     public event Action<string>? OnFactAdded;
 
     // Returns an immutable snapshot of all currently known facts.
-    public IReadOnlySet<string> Snapshot()
+    public ISet<string> Snapshot()
     {
         lock (_lock)
         {
@@ -62,7 +62,7 @@ public sealed class FactRegistry
 
     // Validates that all facts referenced in the graph are known to the registry's declared list.
     // Used only at startup for diagnostic logging — not a hard block.
-    public static void LogUnknownFacts(IReadOnlySet<string> knownFacts, CampaignGraph graph, BepInEx.Logging.ManualLogSource log)
+    public static void LogUnknownFacts(ISet<string> knownFacts, CampaignGraph graph, BepInEx.Logging.ManualLogSource log)
     {
         foreach (var fact in knownFacts)
         {

@@ -26,11 +26,11 @@ public sealed class GraphEvaluator
     }
 
     // Returns all nodes currently considered done.
-    public IEnumerable<GraphNode> GetDoneNodes(IReadOnlySet<string> facts) =>
+    public IEnumerable<GraphNode> GetDoneNodes(ISet<string> facts) =>
         _graph.Nodes.Where(n => IsDone(n, facts));
 
     // Returns all nodes currently active (not done, predecessors done, activation rules met).
-    public IEnumerable<GraphNode> GetActiveNodes(IReadOnlySet<string> facts) =>
+    public IEnumerable<GraphNode> GetActiveNodes(ISet<string> facts) =>
         _graph.Nodes.Where(n =>
             !IsDone(n, facts) &&
             PredecessorsDone(n, facts) &&
@@ -38,7 +38,7 @@ public sealed class GraphEvaluator
 
     // Returns the single highest-priority active player-facing node to display as the primary objective.
     // Prefers objective > safety_barrier > facility_interaction over milestones and bubbles.
-    public GraphNode? GetPrimaryObjective(IReadOnlySet<string> facts) =>
+    public GraphNode? GetPrimaryObjective(ISet<string> facts) =>
         GetActiveNodes(facts)
             .Where(n => n.NodeType is "objective" or "safety_barrier" or "facility_interaction")
             .OrderByDescending(n => n.Priority ?? 0)
@@ -50,7 +50,7 @@ public sealed class GraphEvaluator
         if (node.HintLayers is null)
             return node.Title;
 
-        int depth = System.Math.Clamp(hintDepth, 1, 3);
+        int depth = System.Math.Max(1, System.Math.Min(hintDepth, 3));
 
         // Walk down from depth to 1 until a layer is found.
         for (int d = depth; d >= 1; d--)
@@ -64,7 +64,7 @@ public sealed class GraphEvaluator
 
     // ── Internal helpers ────────────────────────────────────────────────────
 
-    private bool IsDone(GraphNode node, IReadOnlySet<string> facts)
+    private bool IsDone(GraphNode node, ISet<string> facts)
     {
         // already_satisfied_rules: any single rule passing means the node is done
         // (used for drop-in install onto a progressed save — rules are OR'd at the list level).
@@ -80,7 +80,7 @@ public sealed class GraphEvaluator
         return false;
     }
 
-    private bool PredecessorsDone(GraphNode node, IReadOnlySet<string> facts)
+    private bool PredecessorsDone(GraphNode node, ISet<string> facts)
     {
         foreach (var predId in node.Predecessors)
         {
@@ -92,7 +92,7 @@ public sealed class GraphEvaluator
         return true;
     }
 
-    private static bool ActivationRulesMet(GraphNode node, IReadOnlySet<string> facts)
+    private static bool ActivationRulesMet(GraphNode node, ISet<string> facts)
     {
         if (node.ActivationRules.Count == 0)
             return true;

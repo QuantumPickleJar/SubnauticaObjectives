@@ -13,17 +13,37 @@ namespace SubnauticaObjectives;
 internal sealed class ObjectiveSessionBehaviour : MonoBehaviour
 {
     private bool _initialised;
+    private bool _loggedWaitingForPlayer;
+
+    private void Awake()
+    {
+        Plugin.Log?.LogInfo($"[ObjectiveSessionBehaviour] Awake() called");
+        DontDestroyOnLoad(gameObject);
+    }
+
+    private void Start()
+    {
+        Plugin.Log?.LogInfo($"[ObjectiveSessionBehaviour] Start() called");
+    }
 
     private void Update()
     {
         if (_initialised)
             return;
 
-        // Wait until the game session is ready.
-        if (Player.main == null || uGUI_MainMenu.main != null)
+        // Wait until player singleton is available in an active save.
+        if (Player.main == null)
+        {
+            if (!_loggedWaitingForPlayer)
+            {
+                Plugin.Log?.LogInfo("[ObjectiveSessionBehaviour] Waiting for Player.main...");
+                _loggedWaitingForPlayer = true;
+            }
             return;
+        }
 
         _initialised = true;
+        Plugin.Log?.LogInfo("[ObjectiveSessionBehaviour] Player.main detected, running startup.");
         RunStartup();
     }
 

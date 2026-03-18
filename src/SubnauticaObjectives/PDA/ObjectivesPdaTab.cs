@@ -20,7 +20,7 @@ public static class ObjectivesPdaTab
     private const string EntryPrefix = "obj_";
 
     private static ManualLogSource? _log;
-    private static readonly List<string> _registeredKeys = [];
+    private static readonly List<string> _registeredKeys = new List<string>();
 
     public static void Initialize(ManualLogSource log)
     {
@@ -29,7 +29,7 @@ public static class ObjectivesPdaTab
 
     // Registers (or re-registers) all active objectives into the PDA Databank.
     // Call this once at startup after fact detection and again whenever the fact set changes.
-    public static void Refresh(IReadOnlySet<string> facts, GraphEvaluator evaluator, int hintDepth)
+    public static void Refresh(ISet<string> facts, GraphEvaluator evaluator, int hintDepth)
     {
         ClearRegisteredEntries();
 
