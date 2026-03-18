@@ -6,12 +6,11 @@ using SubnauticaObjectives.Graph;
 using SubnauticaObjectives.Models;
 using SubnauticaObjectives.Notifications;
 using SubnauticaObjectives.PDA;
-using UnityEngine;
 
 namespace SubnauticaObjectives;
 
 [BepInPlugin(PluginInfo.PLUGIN_GUID, PluginInfo.PLUGIN_NAME, PluginInfo.PLUGIN_VERSION)]
-public sealed class Plugin
+public sealed class Plugin : BaseUnityPlugin
 {
     // Singleton accessors used by patches and the session behaviour.
     internal static ManualLogSource? Log { get; private set; }
@@ -22,13 +21,13 @@ public sealed class Plugin
     // Hint depth used for display. Could later be read from a config file.
     internal static int HintDepth { get; private set; } = 1;
 
-    // BepInEx v5 Mono: Use a static constructor to initialize the plugin
-    static Plugin()
+    // BepInEx v5 Mono: Awake() is called by Unity after BepInEx has set up the plugin.
+    private void Awake()
     {
         try
         {
-            // Create a manual log source for this plugin
-            Log = BepInEx.Logging.Logger.CreateLogSource(PluginInfo.PLUGIN_NAME);
+            // BaseUnityPlugin provides Logger, pre-configured for this plugin.
+            Log = Logger;
             Log.LogInfo($"Loading {PluginInfo.PLUGIN_NAME} v{PluginInfo.PLUGIN_VERSION}");
 
             // Resolve the campaign graph path from the plugin directory.
@@ -56,10 +55,9 @@ public sealed class Plugin
             // Apply Harmony patches (StoryGoalPatches, KnownTechPatches).
             new Harmony(PluginInfo.PLUGIN_GUID).PatchAll();
 
-            // Attach the per-session MonoBehaviour that runs startup detection.
-            // Note: For Mono v5, we'll create this GameObject and attach the behaviour
-            var gameObject = new GameObject("SubnauticaObjectivesSessionBehaviour");
-            gameObject.AddComponent<ObjectiveSessionBehaviour>();
+            // Attach the per-session MonoBehaviour to this plugin's DontDestroyOnLoad
+            // GameObject so it persists across scene transitions.
+            this.gameObject.AddComponent<ObjectiveSessionBehaviour>();
 
             Log.LogInfo($"{PluginInfo.PLUGIN_NAME} loaded successfully.");
         }
