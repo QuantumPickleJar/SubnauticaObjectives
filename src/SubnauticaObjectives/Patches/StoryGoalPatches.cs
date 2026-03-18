@@ -18,8 +18,12 @@ internal static class StoryGoalPatches
     {
         var fact = FactMapper.StoryGoalFact(key);
         if (fact is null)
+        {
+            Plugin.Log?.LogDebug("[StoryGoalPatches] Unmapped goal completed: " + key);
             return;
+        }
 
+        Plugin.Log?.LogInfo("[StoryGoalPatches] Mapped goal: " + key + " -> " + fact);
         Plugin.Registry?.Add(fact);
     }
 }

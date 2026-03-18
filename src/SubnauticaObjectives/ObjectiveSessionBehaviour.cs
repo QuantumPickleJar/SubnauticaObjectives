@@ -14,6 +14,7 @@ internal sealed class ObjectiveSessionBehaviour : MonoBehaviour
 {
     private bool _initialised;
     private bool _loggedWaitingForPlayer;
+    private bool _loggedWaitingForExploder;
 
     private void Awake()
     {
@@ -28,23 +29,44 @@ internal sealed class ObjectiveSessionBehaviour : MonoBehaviour
 
     private void Update()
     {
-        if (_initialised)
-            return;
-
-        // Wait until player singleton is available in an active save.
-        if (Player.main == null)
+        if (!_initialised)
         {
-            if (!_loggedWaitingForPlayer)
+            // Wait until player singleton is available in an active save.
+            if (Player.main == null)
             {
-                Plugin.Log?.LogInfo("[ObjectiveSessionBehaviour] Waiting for Player.main...");
-                _loggedWaitingForPlayer = true;
+                if (!_loggedWaitingForPlayer)
+                {
+                    Plugin.Log?.LogInfo("[ObjectiveSessionBehaviour] Waiting for Player.main...");
+                    _loggedWaitingForPlayer = true;
+                }
+                return;
             }
-            return;
+
+            _initialised = true;
+            Plugin.Log?.LogInfo("[ObjectiveSessionBehaviour] Player.main detected, running startup.");
+            RunStartup();
+            Plugin.RefreshNow("player_ready", showToast: false);
         }
 
-        _initialised = true;
-        Plugin.Log?.LogInfo("[ObjectiveSessionBehaviour] Player.main detected, running startup.");
-        RunStartup();
+        // Runtime safety net: if Aurora is exploded, ensure fact is present.
+        if (Plugin.Registry != null && !Plugin.Registry.Contains("aurora_exploded"))
+        {
+            if (CrashedShipExploder.main == null)
+            {
+                if (!_loggedWaitingForExploder)
+                {
+                    Plugin.Log?.LogDebug("[ObjectiveSessionBehaviour] Waiting for CrashedShipExploder.main...");
+                    _loggedWaitingForExploder = true;
+                }
+                return;
+            }
+
+            if (CrashedShipExploder.main.IsExploded())
+            {
+                Plugin.Log?.LogInfo("[ObjectiveSessionBehaviour] Aurora exploded detected via runtime poll.");
+                Plugin.Registry.Add("aurora_exploded");
+            }
+        }
     }
 
     private static void RunStartup()
@@ -60,7 +82,7 @@ internal sealed class ObjectiveSessionBehaviour : MonoBehaviour
         var facts = Plugin.Registry.Snapshot();
 
         // Show the first active objective as a toast.
-        var primary = Plugin.Evaluator.GetPrimaryObjective(facts);
+        var primary = Plugin.Evaluator.GetPrimaryDisplayNode(facts);
         if (primary is not null)
         {
             string hint = GraphEvaluator.GetHintText(primary, Plugin.HintDepth);

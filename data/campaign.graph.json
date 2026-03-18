@@ -54,6 +54,7 @@
     "vehicle_upgrade_console_available",
     "modification_station_built",
     "vehicle_depth_upgrade_available",
+    "titanium_picked_up_first_time",
     "cyclops_bridge_fragments_complete",
     "cyclops_engine_fragments_complete",
     "cyclops_hull_fragments_complete",

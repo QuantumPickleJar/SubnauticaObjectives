@@ -134,6 +134,13 @@ public static class FactMapper
         ["ExosuitFragment"] = "prawn_fragment_scan_count_complete",
     };
 
+    // Pickup item tech type name -> fact name.
+    // Used for runtime pickup events where KnownTech hooks are not invoked.
+    private static readonly Dictionary<string, string> PickupToFact = new()
+    {
+        ["Titanium"] = "titanium_picked_up_first_time",
+    };
+
     // Attempts to resolve a story goal key to a fact name.
     // Returns null if there is no mapping.
     public static string? StoryGoalFact(string goalKey) =>
@@ -151,4 +158,8 @@ public static class FactMapper
     // Returns fact for prawn fragment scan completion.
     public static string? PrawnFragmentFact(string techTypeName) =>
         PrawnFragmentToFact.TryGetValue(techTypeName, out var fact) ? fact : null;
+
+    // Returns fact for direct item pickup events.
+    public static string? PickupFact(string techTypeName) =>
+        PickupToFact.TryGetValue(techTypeName, out var fact) ? fact : null;
 }

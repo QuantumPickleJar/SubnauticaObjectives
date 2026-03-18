@@ -44,6 +44,20 @@ public sealed class GraphEvaluator
             .OrderByDescending(n => n.Priority ?? 0)
             .FirstOrDefault();
 
+    // Returns the best active node for UI display.
+    // Prefers objective-like nodes, then falls back to any active node so players
+    // still receive guidance during early graph phases.
+    public GraphNode? GetPrimaryDisplayNode(ISet<string> facts)
+    {
+        var primaryObjective = GetPrimaryObjective(facts);
+        if (primaryObjective is not null)
+            return primaryObjective;
+
+        return GetActiveNodes(facts)
+            .OrderByDescending(n => n.Priority ?? 0)
+            .FirstOrDefault();
+    }
+
     // Returns the hint text for a node at the requested depth (1-3, clamped).
     public static string GetHintText(GraphNode node, int hintDepth)
     {
@@ -61,6 +75,8 @@ public sealed class GraphEvaluator
 
         return node.Title;
     }
+
+    public bool IsNodeDone(GraphNode node, ISet<string> facts) => IsDone(node, facts);
 
     // ── Internal helpers ────────────────────────────────────────────────────
 

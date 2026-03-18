@@ -24,7 +24,7 @@ public sealed class Plugin : BaseUnityPlugin
     public static CampaignGraph?  Graph { get; private set; }
 
     // Hint depth used for display. Could later be read from a config file.
-    public static int HintDepth { get; private set; } = 1;
+    public static int HintDepth { get; private set; } = 2;
 
     private static bool _initialized;
 
@@ -68,8 +68,8 @@ public sealed class Plugin : BaseUnityPlugin
 
             ToastManager.Initialize(Log);
             Log.LogInfo($"ToastManager initialized");
-            
-            ObjectivesPdaTab.Initialize(Log);
+
+            ObjectivesPdaTab.Initialize(Log, Graph);
             Log.LogInfo($"ObjectivesPdaTab initialized");
 
             // Wire the fact-added callback to re-evaluate and show a toast when facts change.
@@ -98,21 +98,34 @@ public sealed class Plugin : BaseUnityPlugin
     // Called each time a new fact is added (at runtime, after startup bulk-load).
     private static void OnFactAdded(string fact)
     {
+        RefreshNow("fact_added:" + fact, showToast: true);
+    }
+
+    // Re-evaluates current graph state and refreshes on-screen/UI outputs.
+    // Used by fact callbacks and runtime hooks (e.g., PDA init, item pickups).
+    public static void RefreshNow(string reason, bool showToast)
+    {
         if (Registry is null || Evaluator is null || Graph is null)
             return;
 
         var facts = Registry.Snapshot();
-        var primary = Evaluator.GetPrimaryObjective(facts);
+        var primary = Evaluator.GetPrimaryDisplayNode(facts);
 
         if (primary is null)
         {
-            ToastManager.Show("All objectives complete!");
+            if (showToast)
+                ToastManager.Show("All objectives complete!");
+
+            ObjectivesPdaTab.Refresh(facts, Evaluator, HintDepth);
+            Log?.LogInfo("[RefreshNow] No active display node. Reason=" + reason);
             return;
         }
 
         string hint = GraphEvaluator.GetHintText(primary, HintDepth);
-        ToastManager.ShowObjectiveChanged(primary.Title, HintDepth, hint);
-        Log?.LogInfo($"[Objective] Active: [{primary.NodeType}] {primary.Id} — \"{hint}\"");
+        if (showToast)
+            ToastManager.ShowObjectiveChanged(primary.Title, HintDepth, hint);
+
+        Log?.LogInfo($"[Objective] Active: [{primary.NodeType}] {primary.Id} — \"{hint}\" (reason={reason})");
 
         // Refresh the PDA Databank entries.
         ObjectivesPdaTab.Refresh(facts, Evaluator, HintDepth);

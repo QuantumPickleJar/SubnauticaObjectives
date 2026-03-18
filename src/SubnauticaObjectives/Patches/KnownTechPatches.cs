@@ -18,6 +18,7 @@ internal static class KnownTechPatches
         var fact = FactMapper.TechTypeFact(name);
         if (fact is not null)
         {
+            Plugin.Log?.LogInfo("[KnownTechPatches] Mapped tech: " + name + " -> " + fact);
             Plugin.Registry?.Add(fact);
             return;
         }
@@ -26,12 +27,19 @@ internal static class KnownTechPatches
         var cyclops = FactMapper.CyclopsFragmentFact(name);
         if (cyclops is not null)
         {
+            Plugin.Log?.LogInfo("[KnownTechPatches] Mapped cyclops fragment: " + name + " -> " + cyclops);
             Plugin.Registry?.Add(cyclops);
             return;
         }
 
         var prawn = FactMapper.PrawnFragmentFact(name);
         if (prawn is not null)
+        {
+            Plugin.Log?.LogInfo("[KnownTechPatches] Mapped prawn fragment: " + name + " -> " + prawn);
             Plugin.Registry?.Add(prawn);
+            return;
+        }
+
+        Plugin.Log?.LogDebug("[KnownTechPatches] Unmapped tech added: " + name);
     }
 }
