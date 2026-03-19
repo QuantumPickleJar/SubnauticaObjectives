@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 
 namespace SubnauticaObjectives.Facts;
 
@@ -84,24 +85,13 @@ public static class FactMapper
         ["PlanetEscaped"]                = "planet_escaped",
     };
 
-    // TechType name (enum.ToString()) → fact name.
-    // These fire when KnownTech.Add is called (blueprint unlocked or item built for the first time).
+    // TechType name (enum.ToString()) -> fact name from KnownTech.Add.
+    // Keep this focused on unlock-style progression, not crafted-item completion.
     private static readonly Dictionary<string, string> TechTypeToFact = new()
     {
-        // Tools / equipment built in fabricator
-        ["RepairTool"]              = "repair_tool_built",
-        ["Seaglide"]                = "seaglide_built",
-        ["LaserCutter"]             = "laser_cutter_built",
-        ["PropulsionCannon"]        = "propulsion_cannon_built",
-        ["Builder"]                 = "habitat_builder_built",
-        ["Beacon"]                  = "beacon_built",
-        ["GravTrap"]                = "grav_trap_built",
-        ["StasisRifle"]             = "stasis_rifle_built",
-        ["ReinforcedDiveSuit"]      = "reinforced_dive_suit_built",
+        // Capability unlocks that can be safely inferred from KnownTech.
+        ["Builder"]                 = "habitat_builder_blueprint_unlocked",
         ["UltraHighCapacityTank"]   = "ultra_high_capacity_tank_available",
-
-        // Deployables built in fabricator
-        ["Constructor"]             = "mobile_vehicle_bay_built",
 
         // Seabase pieces — blueprint unlock (triggers when first fragments scanned)
         ["Moonpool"]                = "moonpool_blueprint_unlocked",
@@ -111,13 +101,45 @@ public static class FactMapper
 
         // Vehicles — blueprint from fragment scanning
         ["Seamoth"]                 = "seamoth_blueprint_unlocked",
-        ["Exosuit"]                 = "prawn_blueprint_unlocked",
-        ["Cyclops"]                 = "cyclops_blueprint_unlocked",
+        // Prawn/Cyclops blueprints are inferred from fragment-completion facts
+        // instead of direct KnownTech unlock to avoid cheat-command pollution.
 
         // Vehicles — built via vehicle bay (KnownTech.Add fires for the built tech type too)
         // These are separate from the blueprint unlock and map to "built" facts.
         // TODO: confirm whether KnownTech.Add fires separately for the built instance
         //       or only once for the blueprint. May need CrafterLogic/Constructor patches.
+    };
+
+    // Some tech unlocks should set additional campaign facts alongside the
+    // primary mapped fact from KnownTech.Add.
+    private static readonly Dictionary<string, string[]> TechTypeToExtraFacts = new()
+    {
+        // Intentionally empty for now.
+    };
+
+    // TechType crafted through crafter/constructor -> built fact.
+    private static readonly Dictionary<string, string> CraftedTechToFact = new()
+    {
+        ["Welder"]                = "repair_tool_built",
+        ["Seaglide"]              = "seaglide_built",
+        ["LaserCutter"]           = "laser_cutter_built",
+        ["PropulsionCannon"]      = "propulsion_cannon_built",
+        ["Builder"]               = "habitat_builder_built",
+        ["Beacon"]                = "beacon_built",
+        ["GravTrap"]              = "grav_trap_built",
+        ["StasisRifle"]           = "stasis_rifle_built",
+        ["ReinforcedDiveSuit"]    = "reinforced_dive_suit_built",
+        ["Constructor"]           = "mobile_vehicle_bay_built",
+        ["Seamoth"]               = "seamoth_built",
+        ["Exosuit"]               = "prawn_built",
+        ["Cyclops"]               = "cyclops_built",
+        ["VehicleHullModule1"]    = "vehicle_depth_upgrade_available",
+        ["VehicleHullModule2"]    = "vehicle_depth_upgrade_available",
+        ["VehicleHullModule3"]    = "vehicle_depth_upgrade_available",
+        ["ExoHullModule1"]        = "vehicle_depth_upgrade_available",
+        ["CyclopsHullModule1"]    = "vehicle_depth_upgrade_available",
+        ["CyclopsHullModule2"]    = "vehicle_depth_upgrade_available",
+        ["CyclopsHullModule3"]    = "vehicle_depth_upgrade_available",
     };
 
     // Cyclops fragment sub-types → partial-completion facts.
@@ -151,6 +173,10 @@ public static class FactMapper
     public static string? TechTypeFact(string techTypeName) =>
         TechTypeToFact.TryGetValue(techTypeName, out var fact) ? fact : null;
 
+    // Returns additional facts that should be set when a tech is learned.
+    public static IEnumerable<string> AdditionalTechTypeFacts(string techTypeName) =>
+        TechTypeToExtraFacts.TryGetValue(techTypeName, out var facts) ? facts : Enumerable.Empty<string>();
+
     // Returns facts for cyclops fragment completion events (fired by PDAScanner).
     public static string? CyclopsFragmentFact(string techTypeName) =>
         CyclopsFragmentToFact.TryGetValue(techTypeName, out var fact) ? fact : null;
@@ -162,4 +188,8 @@ public static class FactMapper
     // Returns fact for direct item pickup events.
     public static string? PickupFact(string techTypeName) =>
         PickupToFact.TryGetValue(techTypeName, out var fact) ? fact : null;
+
+    // Returns fact for successful crafted-item completion.
+    public static string? CraftedTechFact(string techTypeName) =>
+        CraftedTechToFact.TryGetValue(techTypeName, out var fact) ? fact : null;
 }

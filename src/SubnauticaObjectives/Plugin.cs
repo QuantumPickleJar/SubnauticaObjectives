@@ -98,7 +98,8 @@ public sealed class Plugin : BaseUnityPlugin
     // Called each time a new fact is added (at runtime, after startup bulk-load).
     private static void OnFactAdded(string fact)
     {
-        RefreshNow("fact_added:" + fact, showToast: true);
+        bool showToast = fact != "titanium_picked_up_first_time";
+        RefreshNow("fact_added:" + fact, showToast);
     }
 
     // Re-evaluates current graph state and refreshes on-screen/UI outputs.

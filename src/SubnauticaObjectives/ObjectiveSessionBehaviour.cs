@@ -48,6 +48,9 @@ internal sealed class ObjectiveSessionBehaviour : MonoBehaviour
             Plugin.RefreshNow("player_ready", showToast: false);
         }
 
+        if (Plugin.Registry != null && Plugin.Log != null)
+            RuntimeFactDetector.Poll(Plugin.Registry, Plugin.Log);
+
         // Runtime safety net: if Aurora is exploded, ensure fact is present.
         if (Plugin.Registry != null && !Plugin.Registry.Contains("aurora_exploded"))
         {

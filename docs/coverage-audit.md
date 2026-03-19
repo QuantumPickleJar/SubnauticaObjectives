@@ -25,3 +25,49 @@ The following gaps identified during the initial audit have been addressed in th
 This audit is for completeness and clarity, not blind expansion.
 Only missing or underrepresented guidance-critical content should be promoted into the graph.
 The remaining Tier B deferred items (sanctuary cache, beacon management) are candidates for v0.3.x.
+
+## Runtime Hook Coverage Pass (2026-03-18)
+
+Exhaustive fact-coverage diff against `data/campaign.graph.json` produced 4 uncovered facts:
+
+- `habitat_builder_blueprint_unlocked`
+- `player_has_visited_aurora`
+- `radio_repaired`
+- `vehicle_depth_upgrade_available`
+
+Implemented coverage in this pass:
+
+- `KnownTech.Add` supplemental mappings now emit:
+	- `Builder -> habitat_builder_blueprint_unlocked`
+	- depth module unlocks -> `vehicle_depth_upgrade_available`
+- Added low-frequency runtime detector polling (`RuntimeFactDetector`) for:
+	- radio repaired inference from lifepod radio state
+	- aurora visit inference from biome string
+	- known-tech fallback inference for builder blueprint and depth modules
+	- ongoing base/vehicle inferred facts during active gameplay
+- Titanium first pickup no longer forces objective toast output.
+
+Notes:
+
+- `radio_repaired` and `player_has_visited_aurora` are inferred conservatively due unstable/unknown story-goal key strings across versions.
+- Story-goal and known-tech debug logging remains enabled to refine these mappings over time.
+
+## Critical Gap Patch (fixleaks / drive core)
+
+Problem observed in live testing:
+
+- `explodeship` advanced guidance correctly.
+- `fixleaks` did not trigger `drive_core_repaired` updates.
+
+Implemented fallback hooks:
+
+- `LeakingRadiation.NotifyLeaksFixed` -> `drive_core_repaired`
+- `LeakingRadiation.OnConsoleCommand_fixleaks` -> `drive_core_repaired`
+- `LeakingRadiation.OnConsoleCommand_decontaminate` -> `drive_core_repaired`
+- `Radio.OnRepair` -> `radio_repaired`
+
+Runtime safety net:
+
+- Polling fallback infers `drive_core_repaired` when `aurora_exploded` is present and leak count reaches zero.
+
+This pass closes the major undetectable progression gap around Aurora reactor repair.

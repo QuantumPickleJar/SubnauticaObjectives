@@ -65,12 +65,17 @@
     Only runs when $(GameDir) is configured.
   -->
   <Target Name="DeployToGame" AfterTargets="Build" Condition="'$(GameDir)' != ''">
+    <MakeDir Directories="$(GameDir)\BepInEx\plugins\$(AssemblyName)\data" />
     <Copy
       SourceFiles="$(OutputPath)$(AssemblyName).dll"
       DestinationFolder="$(GameDir)\BepInEx\plugins\$(AssemblyName)"
       SkipUnchangedFiles="true" />
+    <Copy
+      SourceFiles="$(MSBuildProjectDirectory)\..\..\data\campaign.graph.json"
+      DestinationFolder="$(GameDir)\BepInEx\plugins\$(AssemblyName)\data"
+      SkipUnchangedFiles="true" />
     <Message
-      Text="Deployed $(AssemblyName).dll to $(GameDir)\BepInEx\plugins\$(AssemblyName)"
+      Text="Deployed $(AssemblyName).dll and campaign.graph.json to $(GameDir)\BepInEx\plugins\$(AssemblyName)"
       Importance="high" />
   </Target>
 

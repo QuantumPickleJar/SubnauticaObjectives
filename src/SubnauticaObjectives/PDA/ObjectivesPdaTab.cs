@@ -28,6 +28,7 @@ public static class ObjectivesPdaTab
     private static ManualLogSource? _log;
     private static CampaignGraph? _graph;
     private static Dictionary<string, GraphNode>? _nodesById;
+    private static readonly HashSet<string> _everUnlockedIds = new();
 
     private static readonly FieldInfo? MappingField =
         typeof(PDAEncyclopedia).GetField("mapping", BindingFlags.Static | BindingFlags.NonPublic);
@@ -37,6 +38,9 @@ public static class ObjectivesPdaTab
 
     private static readonly FieldInfo? LanguageStringsField =
         typeof(Language).GetField("strings", BindingFlags.Instance | BindingFlags.NonPublic);
+
+    private static readonly FieldInfo? EntriesField =
+        typeof(PDAEncyclopedia).GetField("entries", BindingFlags.Static | BindingFlags.NonPublic);
 
     public static void Initialize(ManualLogSource log, CampaignGraph graph)
     {
@@ -100,9 +104,18 @@ public static class ObjectivesPdaTab
         }
 
         var activeNodes = evaluator.GetActiveNodes(facts).ToList();
+        var actionableNodes = activeNodes
+            .Where(n => n.NodeType != "major_milestone" && n.NodeType != "bubble")
+            .OrderByDescending(n => n.Priority ?? 0)
+            .ToList();
+        var trackerNodes = activeNodes
+            .Where(n => n.NodeType == "major_milestone" || n.NodeType == "bubble")
+            .OrderByDescending(n => n.Priority ?? 0)
+            .ToList();
 
         var summaryBuilder = new StringBuilder();
-        summaryBuilder.AppendLine("Active objectives:\n");
+        summaryBuilder.AppendLine("Pending Objectives");
+        summaryBuilder.AppendLine();
 
         int count = 0;
         foreach (var node in activeNodes.OrderByDescending(n => n.Priority ?? 0))
@@ -113,15 +126,47 @@ public static class ObjectivesPdaTab
             RegisterLanguageLine("Ency_" + key, node.Title);
             RegisterLanguageLine("EncyDesc_" + key, body);
             UnlockEntry(key);
+            _everUnlockedIds.Add(node.Id);
 
-            // Summary line uses the depth-1 hint (vaguest).
-            string summaryHint = GraphEvaluator.GetHintText(node, 1);
-            summaryBuilder.AppendLine("▸ " + summaryHint);
             count++;
         }
 
-        if (count == 0)
-            summaryBuilder.AppendLine("All objectives complete — congratulations!");
+        int summaryCount = 0;
+        foreach (var node in actionableNodes)
+        {
+            string summaryHint = GraphEvaluator.GetHintText(node, 1);
+            if (string.IsNullOrWhiteSpace(summaryHint) || summaryHint == node.Title)
+                summaryHint = node.Title;
+
+            summaryBuilder.AppendLine("- " + EnsureSentence(summaryHint));
+            summaryCount++;
+        }
+
+        if (summaryCount == 0)
+            summaryBuilder.AppendLine("- No pending actionable objectives.");
+
+        if (trackerNodes.Count > 0)
+        {
+            summaryBuilder.AppendLine();
+            summaryBuilder.AppendLine("Active Phase Trackers");
+            foreach (var node in trackerNodes)
+                summaryBuilder.AppendLine("- " + EnsureSentence(node.Title));
+        }
+
+        // Remove PDA entries for previously-unlocked nodes that are now done.
+        var doneIds = new List<string>();
+        foreach (var nodeId in _everUnlockedIds)
+        {
+            if (!_nodesById!.TryGetValue(nodeId, out var doneNode))
+                continue;
+            if (!evaluator.IsNodeDone(doneNode, facts))
+                continue;
+
+            RemoveEntry(EntryPrefix + nodeId);
+            doneIds.Add(nodeId);
+        }
+        foreach (var id in doneIds)
+            _everUnlockedIds.Remove(id);
 
         // Unlock the summary entry so Guide > Objectives is always visible.
         string summaryKey = EntryPrefix + "summary";
@@ -129,7 +174,7 @@ public static class ObjectivesPdaTab
         RegisterLanguageLine("EncyDesc_" + summaryKey, summaryBuilder.ToString());
         UnlockEntry(summaryKey);
 
-        _log?.LogInfo("[ObjectivesPdaTab] Refreshed — " + count + " active objective(s) registered.");
+        _log?.LogInfo("[ObjectivesPdaTab] Refreshed - " + count + " active objective(s) registered.");
     }
 
     // Delegates to hint-layer body or overview body depending on the node.
@@ -144,18 +189,27 @@ public static class ObjectivesPdaTab
     // Builds the Databank page body for a node that has hint layers.
     private static string BuildHintBody(GraphNode node, int hintDepth)
     {
+        var layers = node.HintLayers;
+        if (layers is null || layers.Count == 0)
+            return node.Title;
+
         int maxDepth = System.Math.Max(1, System.Math.Min(hintDepth, 3));
         var sb = new StringBuilder();
 
+        sb.AppendLine("Assessment");
+        sb.AppendLine(EnsureSentence(node.Title + " is currently active."));
+        sb.AppendLine();
+        sb.AppendLine("Guidance");
+
         for (int d = 1; d <= maxDepth; d++)
         {
-            if (!node.HintLayers.TryGetValue(d.ToString(), out var layer))
+            if (!layers.TryGetValue(d.ToString(), out var layer))
                 continue;
 
             if (layer.Visibility == "spoiler_masked")
-                sb.AppendLine("[Classified — increase hint depth to reveal]");
+                sb.AppendLine("Classified: Increase hint depth to reveal this guidance layer.");
             else
-                sb.AppendLine(layer.Text);
+                sb.AppendLine(EnsureSentence(layer.Text));
 
             if (d < maxDepth)
                 sb.AppendLine();
@@ -171,19 +225,57 @@ public static class ObjectivesPdaTab
             return node.Title;
 
         var sb = new StringBuilder();
-        sb.AppendLine(node.Title);
+        sb.AppendLine("Campaign Phase");
+        sb.AppendLine(EnsureSentence(node.Title + " is being tracked by this entry."));
         sb.AppendLine();
+        sb.AppendLine("Status");
+        sb.AppendLine("Only pending directives are shown below.");
+        sb.AppendLine();
+        sb.AppendLine("Directive Checklist");
+        sb.AppendLine();
+
+        int pending = 0;
+        int completed = 0;
 
         foreach (string successorId in node.Successors)
         {
             if (!_nodesById.TryGetValue(successorId, out var successor))
                 continue;
 
-            string marker = evaluator.IsNodeDone(successor, facts) ? "✓" : "○";
-            sb.AppendLine(marker + "  " + successor.Title);
+            bool done = evaluator.IsNodeDone(successor, facts);
+            if (done)
+            {
+                completed++;
+                continue;
+            }
+
+            sb.AppendLine("[ ]  " + successor.Title);
+            pending++;
+        }
+
+        if (pending == 0)
+            sb.AppendLine("- No pending directives remain in this phase.");
+
+        if (completed > 0)
+        {
+            sb.AppendLine();
+            sb.AppendLine(EnsureSentence(completed + " directive(s) already complete and hidden from this checklist"));
         }
 
         return sb.ToString().TrimEnd();
+    }
+
+    private static string EnsureSentence(string text)
+    {
+        string cleaned = text.Trim();
+        if (cleaned.Length == 0)
+            return cleaned;
+
+        char last = cleaned[cleaned.Length - 1];
+        if (last != '.' && last != '!' && last != '?')
+            return cleaned + ".";
+
+        return cleaned;
     }
 
     // ── Helpers ──────────────────────────────────────────────────────────
@@ -232,6 +324,22 @@ public static class ObjectivesPdaTab
         catch (Exception ex)
         {
             _log?.LogWarning("[ObjectivesPdaTab] Failed to unlock '" + key + "': " + ex.Message);
+        }
+    }
+
+    private static void RemoveEntry(string key)
+    {
+        try
+        {
+            if (EntriesField?.GetValue(null) is not IDictionary entries)
+                return;
+
+            if (entries.Contains(key))
+                entries.Remove(key);
+        }
+        catch (Exception ex)
+        {
+            _log?.LogWarning("[ObjectivesPdaTab] Failed to remove '" + key + "': " + ex.Message);
         }
     }
 

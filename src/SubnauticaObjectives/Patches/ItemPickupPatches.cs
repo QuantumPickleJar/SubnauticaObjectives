@@ -1,6 +1,5 @@
 using HarmonyLib;
 using SubnauticaObjectives.Facts;
-using SubnauticaObjectives.Notifications;
 
 namespace SubnauticaObjectives.Patches;
 
@@ -19,10 +18,6 @@ internal static class ItemPickupPatches
 
         var techType = pickupable.GetTechType();
         string techTypeName = techType.ToString();
-
-        // Always use titanium pickup as a runtime refresh hook for Databank/UI state.
-        if (techTypeName == "Titanium")
-            Plugin.RefreshNow("pickup:titanium", showToast: false);
 
         var fact = FactMapper.PickupFact(techTypeName);
         if (fact is null)
@@ -57,6 +52,5 @@ internal static class PickupablePatches
             return;
 
         Plugin.Log?.LogDebug("[PickupablePatches] Titanium pickup observed via Pickupable.Pickup.");
-        Plugin.RefreshNow("pickupable:titanium", showToast: false);
     }
 }
